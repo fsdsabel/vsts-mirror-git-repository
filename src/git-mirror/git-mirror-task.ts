@@ -55,15 +55,16 @@ export class GitMirrorTask {
     }
 
     public gitCloneMirror() {
-        const authenticatedSourceGitUrl = this.getAuthenticatedGitUri(this.sourceGitRepositoryUri, this.sourceGitRepositoryPersonalAccessToken);
         const verifySSLCertificateFlag = this.getSourceVerifySSLCertificate();
+        const sourcePat = Buffer.from(":" + this.sourceGitRepositoryPersonalAccessToken, "utf-8").toString("base64");
         return taskLib
             .tool("git")
             .argIf(verifySSLCertificateFlag, ["-c", "http.sslVerify=true"])
             .argIf(!verifySSLCertificateFlag, ["-c", "http.sslVerify=false"])
+            .arg(["-c", `http.extraheader=AUTHORIZATION: Basic ${sourcePat}`])
             .arg("clone")
             .arg("--mirror")
-            .arg(authenticatedSourceGitUrl)
+            .arg(this.sourceGitRepositoryUri)
             .arg(this.sourceGitRepositoryCloneDirectory)
             .exec();
     }
